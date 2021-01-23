@@ -98,6 +98,10 @@ async def now_inline(inline_query: InlineQuery):
         ]
         await bot.answer_inline_query(inline_query.id, result, cache_time=5)
 
+        # Remove temp pictures
+        os.remove(f"pictures/temp/{inline_query.from_user.first_name}.png")
+        os.remove(f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+
 
     except:
         logger.exception("Exception in generating")
