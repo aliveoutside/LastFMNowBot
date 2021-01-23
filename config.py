@@ -4,6 +4,10 @@ LASTFM_API_KEY = ""
 LASTFM_API_SECRET = ""
 IMGBB_API_KEY = ""
 
+# VK
+VK_LOGIN = ""
+VK_PASSWORD = ""
+
 # webhook settings
 WEBHOOK_HOST = ''
 WEBHOOK_PATH = '/'
