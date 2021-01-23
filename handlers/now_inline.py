@@ -10,6 +10,7 @@ from aiogram import types
 from aiogram.types import InlineQuery, InlineQueryResultPhoto
 
 import config
+import song_link
 import vk
 from misc import dp, bot
 from photo_uploader import uploadphoto
@@ -23,7 +24,6 @@ logger = logging.getLogger("now_inline")
 
 @dp.inline_handler()
 async def now_inline(inline_query: InlineQuery):
-
     # Get last.fm username
     lastfm_username = inline_query.query.split(" ")[0]
 
@@ -51,13 +51,15 @@ async def now_inline(inline_query: InlineQuery):
         pfp_id = "default-profile"
 
     finally:
-        logger.info(f"Profile picture for {inline_query.from_user.first_name} is pictures/cache/{pfp_id}.png. Continuing.")
+        logger.info(
+            f"Profile picture for {inline_query.from_user.first_name} is pictures/cache/{pfp_id}.png. Continuing.")
 
     # Download cover image from Last.FM
-    logger.info(f"Downloading cover image for {inline_query.from_user.first_name} ({track.get_cover_image(pylast.SIZE_LARGE)})")
+    logger.info(
+        f"Downloading cover image for {inline_query.from_user.first_name} ({track.get_cover_image(pylast.SIZE_LARGE)})")
     try:
         Image.open(requests.get(track.get_cover_image(pylast.SIZE_LARGE), stream=True).raw).convert("RGB").save(
-        f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+            f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
     # If album cover fucked up
     except requests.exceptions.MissingSchema:
         logger.info("Copying default album picture to temp folder")
@@ -78,13 +80,18 @@ async def now_inline(inline_query: InlineQuery):
         # Inline buttons
         kb = types.InlineKeyboardMarkup()
         btn_lastfm = types.InlineKeyboardButton(text="Last.FM", url=track.get_url())
-        btn_vk = types.InlineKeyboardButton(text="VK", url=vk.search(track.get_name() + " " + track.get_artist().get_name()))
-        kb.row(btn_lastfm, btn_vk)
+        btn_vk = types.InlineKeyboardButton(text="VK",
+                                            url=vk.search(track.get_name() + " " + track.get_artist().get_name()))
+        try:
+            btn_song_link = types.InlineKeyboardButton(text="song.link", url=song_link.get(
+                track.get_name() + " " + track.get_artist().get_name()))
+            kb.row(btn_lastfm, btn_vk, btn_song_link)
+        except IndexError:
+            kb.row(btn_lastfm, btn_vk)
 
         # Send picture as inline result
         logger.info(f"Sending generated picture to {inline_query.from_user.first_name}")
         uploaded_pics = uploadphoto(f"pictures/temp/{inline_query.from_user.first_name}.png")
-        logger.info("Uploaded photos - " + str(uploaded_pics))
         result = [
             InlineQueryResultPhoto(
                 id=str(uuid1(clock_seq=0)),
@@ -102,8 +109,7 @@ async def now_inline(inline_query: InlineQuery):
         os.remove(f"pictures/temp/{inline_query.from_user.first_name}.png")
         os.remove(f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
 
+        logger.info("Success!")
 
     except:
         logger.exception("Exception in generating")
-
-
