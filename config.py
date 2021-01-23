@@ -8,6 +8,10 @@ IMGBB_API_KEY = ""
 VK_LOGIN = ""
 VK_PASSWORD = ""
 
+# Spotify
+SPOTIPY_CLIENT_ID = ""
+SPOTIPY_CLIENT_SECRET = ""
+
 # webhook settings
 WEBHOOK_HOST = ''
 WEBHOOK_PATH = '/'
