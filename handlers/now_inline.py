@@ -51,9 +51,14 @@ async def now_inline(inline_query: InlineQuery):
         logger.info(f"Profile picture for {inline_query.from_user.first_name} is pictures/cache/{pfp_id}.png. Continuing.")
 
     # Download cover image from Last.FM
-    logger.info(f"Downloading cover image for {inline_query.from_user.first_name} ({track.get_cover_image(pylast.SIZE_LARGE)}")
-    Image.open(requests.get(track.get_cover_image(pylast.SIZE_LARGE), stream=True).raw).convert("RGB").save(
+    logger.info(f"Downloading cover image for {inline_query.from_user.first_name} ({track.get_cover_image(pylast.SIZE_LARGE)})")
+    try:
+        Image.open(requests.get(track.get_cover_image(pylast.SIZE_LARGE), stream=True).raw).convert("RGB").save(
         f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+    except requests.exceptions.MissingSchema:
+        # TODO: спасибо ласт фму за сегфолты при скачивании обложки
+        return
+
     try:
         # Generate picture
         logger.info(f"Generating picture for {inline_query.from_user.first_name}")
