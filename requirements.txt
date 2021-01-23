@@ -8,7 +8,7 @@ certifi
 chardet
 idna
 multidict
-Pillow=
+Pillow
 pylast
 pytz
 requests
