@@ -3,6 +3,8 @@ from uuid import uuid1
 
 import pylast
 import requests
+import shutil
+import os
 from PIL import Image
 from aiogram import types
 from aiogram.types import InlineQuery, InlineQueryResultPhoto
@@ -55,16 +57,24 @@ async def now_inline(inline_query: InlineQuery):
     try:
         Image.open(requests.get(track.get_cover_image(pylast.SIZE_LARGE), stream=True).raw).convert("RGB").save(
         f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+    # If album cover fucked up
     except requests.exceptions.MissingSchema:
-        # TODO: спасибо ласт фму за сегфолты при скачивании обложки
-        return
+        logger.info("Copying default album picture to temp folder")
+        shutil.copy("pictures/default-album.jpg", f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+
+    # Get album name
+    try:
+        album_name = track.get_album().get_name()
+    except AttributeError:
+        album_name = track.get_name()
 
     try:
         # Generate picture
         logger.info(f"Generating picture for {inline_query.from_user.first_name}")
         generate_picture(pfp_id, track.get_name(), track.get_artist().get_name(),
-                         track.get_album().get_name(), inline_query.from_user.first_name)
+                         album_name, inline_query.from_user.first_name)
 
+        # Inline buttons
         kb = types.InlineKeyboardMarkup()
         btn_lastfm = types.InlineKeyboardButton(text="Last.FM", url=track.get_url())
         kb.add(btn_lastfm)
@@ -85,6 +95,10 @@ async def now_inline(inline_query: InlineQuery):
             )
         ]
         await bot.answer_inline_query(inline_query.id, result, cache_time=5)
+
+        # Remove temp pictures
+        os.remove(f"pictures/temp/{inline_query.from_user.first_name}.png")
+        os.remove(f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
 
 
     except:
