@@ -6,6 +6,7 @@ from aiogram.contrib.fsm_storage.redis import RedisStorage2
 from aiogram.dispatcher import DEFAULT_RATE_LIMIT
 from aiogram.dispatcher.handler import CancelHandler, current_handler
 from aiogram.dispatcher.middlewares import BaseMiddleware
+from aiogram.utils import executor
 from aiogram.utils.exceptions import Throttled
 from aiogram.utils.executor import start_webhook
 
@@ -108,17 +109,12 @@ class ThrottlingMiddleware(BaseMiddleware):
             await message.reply('Unlocked.')
 
 
-async def on_startup(dp):
-    await misc.bot.set_webhook(config.WEBHOOK_URL)
-    # insert code here to run it after start
-
 
 async def on_shutdown(dp):
     logging.warning('Shutting down..')
 
     # insert code here to run it before shutdown
     # Remove webhook (not acceptable in some cases)
-    await misc.bot.delete_webhook()
 
     # Close DB connection (if used)
     await dp.storage.close()
@@ -128,12 +124,4 @@ async def on_shutdown(dp):
 if __name__ == '__main__':
     misc.dp.middleware.setup(ThrottlingMiddleware())
 
-    start_webhook(
-        dispatcher=misc.dp,
-        webhook_path=config.WEBHOOK_PATH,
-        on_startup=on_startup,
-        on_shutdown=on_shutdown,
-        skip_updates=True,
-        host=config.WEBAPP_HOST,
-        port=config.WEBAPP_PORT,
-    )
+    executor.start_polling(misc.dp, skip_updates=True)
