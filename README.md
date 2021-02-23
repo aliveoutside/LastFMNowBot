@@ -8,5 +8,4 @@ TODO:
 
 Done:
 - [X] Add current track's links to streaming services
-  - [X] VK
   - [X] song.link

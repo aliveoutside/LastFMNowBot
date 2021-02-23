@@ -11,7 +11,6 @@ from aiogram.types import InlineQuery, InlineQueryResultPhoto
 
 import config
 import song_link
-import vk
 from misc import dp, bot
 from photo_uploader import uploadphoto
 from picture_generator import generate_picture
@@ -80,14 +79,13 @@ async def now_inline(inline_query: InlineQuery):
         # Inline buttons
         kb = types.InlineKeyboardMarkup()
         btn_lastfm = types.InlineKeyboardButton(text="Last.FM", url=track.get_url())
-        btn_vk = types.InlineKeyboardButton(text="VK",
-                                            url=vk.search(track.get_name() + " " + track.get_artist().get_name()))
+
         try:
             btn_song_link = types.InlineKeyboardButton(text="song.link", url=song_link.get(
                 track.get_name() + " " + track.get_artist().get_name()))
-            kb.row(btn_lastfm, btn_vk, btn_song_link)
+            kb.row(btn_lastfm,  btn_song_link)
         except IndexError:
-            kb.row(btn_lastfm, btn_vk)
+            kb.row(btn_lastfm)
 
         # Send picture as inline result
         logger.info(f"Sending generated picture to {inline_query.from_user.first_name}")
