@@ -8,11 +8,3 @@ IMGBB_API_KEY = ""
 SPOTIPY_CLIENT_ID = ""
 SPOTIPY_CLIENT_SECRET = ""
 
-# webhook settings
-WEBHOOK_HOST = ''
-WEBHOOK_PATH = '/'
-WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
-
-# webserver settings
-WEBAPP_HOST = 'localhost'
-WEBAPP_PORT = 3001
