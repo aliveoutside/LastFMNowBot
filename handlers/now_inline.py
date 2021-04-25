@@ -11,6 +11,7 @@ from aiogram.types import InlineQuery, InlineQueryResultPhoto
 
 import config
 import song_link
+import user
 from misc import dp, bot
 from photo_uploader import uploadphoto
 from picture_generator import generate_picture
@@ -24,14 +25,24 @@ logger = logging.getLogger("now_inline")
 @dp.inline_handler()
 async def now_inline(inline_query: InlineQuery):
     # Get last.fm username
-    lastfm_username = inline_query.query.split(" ")[0]
+    try:
+        lastfm_username = user.get_lastfm_username(inline_query.from_user.id)
+    except TypeError:
+        return await inline_query.answer([], cache_time=1, is_personal=True, switch_pm_parameter="link",
+                                         switch_pm_text="Click here to register!")
 
-    # Check if it exist
+    # Check if user is listening to anything
     try:
         track = network.get_user(lastfm_username).get_now_playing()
+        track.get_name()
     except:
-        logger.exception(f"Exception - user {lastfm_username} does not exist")
-        return
+        article = types.InlineQueryResultArticle(
+            id=str(uuid1(clock_seq=0)),
+            title="You are not listening to anything!",
+            input_message_content=types.InputTextMessageContent(
+                message_text=f"{inline_query.from_user.first_name} is not listening to anything!")
+        )
+        return await inline_query.answer([article], is_personal=True, cache_time=1)
 
     # Get user's profile pictures
     pfps = await bot.get_user_profile_photos(inline_query.from_user.id, limit=1)
@@ -58,11 +69,11 @@ async def now_inline(inline_query: InlineQuery):
         f"Downloading cover image for {inline_query.from_user.first_name} ({track.get_cover_image(pylast.SIZE_LARGE)})")
     try:
         Image.open(requests.get(track.get_cover_image(pylast.SIZE_LARGE), stream=True).raw).convert("RGB").save(
-            f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+            f"pictures/temp/{inline_query.from_user.id}-album.jpg")
     # If album cover fucked up
     except requests.exceptions.MissingSchema:
         logger.info("Copying default album picture to temp folder")
-        shutil.copy("pictures/default-album.jpg", f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+        shutil.copy("pictures/default-album.jpg", f"pictures/temp/{inline_query.from_user.id}-album.jpg")
 
     # Get album name
     try:
@@ -74,7 +85,7 @@ async def now_inline(inline_query: InlineQuery):
         # Generate picture
         logger.info(f"Generating picture for {inline_query.from_user.first_name}")
         generate_picture(pfp_id, track.get_name(), track.get_artist().get_name(),
-                         album_name, inline_query.from_user.first_name)
+                         album_name, user.get_name(inline_query.from_user.id), inline_query.from_user.id)
 
         # Inline buttons
         kb = types.InlineKeyboardMarkup()
@@ -83,13 +94,13 @@ async def now_inline(inline_query: InlineQuery):
         try:
             btn_song_link = types.InlineKeyboardButton(text="song.link", url=song_link.get(
                 track.get_name() + " " + track.get_artist().get_name()))
-            kb.row(btn_lastfm,  btn_song_link)
+            kb.row(btn_lastfm, btn_song_link)
         except IndexError:
             kb.row(btn_lastfm)
 
         # Send picture as inline result
         logger.info(f"Sending generated picture to {inline_query.from_user.first_name}")
-        uploaded_pics = uploadphoto(f"pictures/temp/{inline_query.from_user.first_name}.png")
+        uploaded_pics = uploadphoto(f"pictures/temp/{inline_query.from_user.id}.png")
         result = [
             InlineQueryResultPhoto(
                 id=str(uuid1(clock_seq=0)),
@@ -104,8 +115,8 @@ async def now_inline(inline_query: InlineQuery):
         await bot.answer_inline_query(inline_query.id, result, cache_time=5)
 
         # Remove temp pictures
-        os.remove(f"pictures/temp/{inline_query.from_user.first_name}.png")
-        os.remove(f"pictures/temp/{inline_query.from_user.first_name}-album.jpg")
+        os.remove(f"pictures/temp/{inline_query.from_user.id}.png")
+        os.remove(f"pictures/temp/{inline_query.from_user.id}-album.jpg")
 
         logger.info("Success!")
 

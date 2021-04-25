@@ -8,11 +8,10 @@ from aiogram.dispatcher.handler import CancelHandler, current_handler
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.utils import executor
 from aiogram.utils.exceptions import Throttled
-from aiogram.utils.executor import start_webhook
 
-import config
 import handlers
 import misc
+from handlers import link
 
 str(handlers)  # Костыль для pycharm
 
@@ -122,6 +121,5 @@ async def on_shutdown(dp):
     logging.warning('Bye!')
 
 if __name__ == '__main__':
-    misc.dp.middleware.setup(ThrottlingMiddleware())
-
+    link.register_handlers_link(misc.dp)
     executor.start_polling(misc.dp, skip_updates=True)
